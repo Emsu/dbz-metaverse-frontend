@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './SelectCharacter.css';
+import LoadingIndicator from '../LoadingIndicator';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, transformCharacterData } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
@@ -7,18 +8,22 @@ import myEpicGame from '../../utils/MyEpicGame.json';
 const SelectCharacter = ({ setCharacterNFT }) => {
   const [characters, setCharacters] = useState([]);
   const [gameContract, setGameContract] = useState(null);
+  const [mintingCharacter, setMintingCharacter] = useState(false);
 
   // Actions
   const mintCharacterNFTAction = (characterId) => async () => {
     try {
       if (gameContract) {
+        setMintingCharacter(true);
         console.log('Minting character in progress...');
         const mintTxn = await gameContract.mintCharacterNFT(characterId);
         await mintTxn.wait();
         console.log('mintTxn:', mintTxn);
+        setMintingCharacter(false);
       }
     } catch (error) {
       console.warn('MintCharacterAction Error:', error);
+      setMintingCharacter(false);
     }
   };
 
@@ -76,7 +81,7 @@ const SelectCharacter = ({ setCharacterNFT }) => {
         `CharacterNFTMinted - sender: ${sender} tokenId: ${tokenId.toNumber()} characterIndex: ${characterIndex.toNumber()}`
       );
 
-      alert(`Your NFT is all done -- see it here: https://testnets.opensea.io/assets/${gameContract}/${tokenId.toNumber()}`)
+      alert(`Your NFT is all done -- see it here: https://testnets.opensea.io/assets/${gameContract.address}/${tokenId.toNumber()}`)
 
       /*
        * Once our character NFT is minted we can fetch the metadata from our contract
@@ -126,10 +131,20 @@ const SelectCharacter = ({ setCharacterNFT }) => {
 
   return (
     <div className="select-character-container">
-      <h2>Mint Your Hero. Choose wisely.</h2>
-      {/* Only show this when there are characters in state */}
       {characters.length > 0 && (
         <div className="character-grid">{renderCharacters()}</div>
+      )}
+      {mintingCharacter && (
+        <div className="loading">
+          <div className="indicator">
+            <LoadingIndicator />
+            <p>Minting In Progress...</p>
+          </div>
+          <img
+            src="https://media2.giphy.com/media/61tYloUgq1eOk/giphy.gif?cid=ecf05e47dg95zbpabxhmhaksvoy8h526f96k4em0ndvx078s&rid=giphy.gif&ct=g"
+            alt="Minting loading indicator"
+          />
+        </div>
       )}
     </div>
   );

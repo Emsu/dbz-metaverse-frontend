@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, transformCharacterData } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
+import LoadingIndicator from '../LoadingIndicator';
 import './Arena.css';
 
 /*
  * We pass in our characterNFT metadata so we can a cool card in our UI
  */
-const Arena = ({ characterNFT }) => {
+const Arena = ({ characterNFT, setCharacterNFT }) => {
   // State
   const [gameContract, setGameContract] = useState(null);
   const [boss, setBoss] = useState(null);
@@ -15,6 +16,7 @@ const Arena = ({ characterNFT }) => {
   * We are going to use this to add a bit of fancy animations during attacks
   */
   const [attackState, setAttackState] = useState('');
+  const [showToast, setShowToast] = useState(false);
 
   const runAttackAction = async () => {
     try {
@@ -25,6 +27,11 @@ const Arena = ({ characterNFT }) => {
         await attackTxn.wait();
         console.log('attackTxn:', attackTxn);
         setAttackState('hit');
+        
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 5000);
       }
     } catch (error) {
       console.error('Error attacking boss:', error);
@@ -97,6 +104,12 @@ const Arena = ({ characterNFT }) => {
 
   return (
     <div className="arena-container">
+      {boss && characterNFT && (
+        <div id="toast" className={showToast ? 'show' : ''}>
+          <div id="desc">{`💥 ${boss.name} was hit for ${characterNFT.attackDamage}!`}</div>
+        </div>
+      )}
+
       {/* Boss */}
       {boss && (
         <div className="boss-container">
@@ -116,6 +129,12 @@ const Arena = ({ characterNFT }) => {
               {`💥 Attack ${boss.name}`}
             </button>
           </div>
+          {attackState === 'attacking' && (
+            <div className="loading-indicator">
+              <LoadingIndicator />
+              <p>Attacking ⚔️</p>
+            </div>
+          )}
         </div>
       )}
 
